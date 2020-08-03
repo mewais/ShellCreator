@@ -4,17 +4,16 @@ import pyparsing
 import logging
 import operator
 
-from .Utils.StringUtils import stringToNumber
 from .Utils.Operators import operator_and, operator_or
 
 logger = logging.getLogger('Shell')
 builtin_variables = {}
 variables = {}
 
-variable_names = pyparsing.Combine(pyparsing.Literal('$') + pyparsing.Word(pyparsing.alphanums + '_'))
-integer = pyparsing.Word(pyparsing.nums)
-double = pyparsing.Combine(pyparsing.Word(pyparsing.nums) + '.' + pyparsing.Word(pyparsing.nums))
-parser = pyparsing.operatorPrecedence(variable_names | double | integer, [
+variable_name = pyparsing.Combine(pyparsing.Literal('$') + pyparsing.Word(pyparsing.alphas, pyparsing.alphanums + '_'))
+integer = pyparsing.pyparsing_common.signed_integer
+double = pyparsing.pyparsing_common.real
+parser = pyparsing.operatorPrecedence(variable_name | double | integer, [
                                 ('**', 2, pyparsing.opAssoc.RIGHT),
                                 ('-', 1, pyparsing.opAssoc.RIGHT),
                                 (pyparsing.oneOf('* / // %'), 2, pyparsing.opAssoc.LEFT),
@@ -66,16 +65,15 @@ def evaluateEquation(ast):
                 logger.error('Variable {} does not exist.', string[1:])
                 raise NameError('Variable does not exist')
         else:
-            try:
-                value = stringToNumber(string)
-            except ValueError as e:
-                logger.critical('All strings must be variables or number literals. Got {}', string)
-                exit(4)
+            logger.critical('All strings must be variable names. Got {}', string)
+            exit(4)
         return value
     # Eval can be dangerous, so we do this by hand
     if isinstance(ast, str):
         # This should only happen on the top level
         return evaluateString(ast)
+    if isinstance(ast, int) or isinstance(ast, float):
+        return ast
 
     if not isinstance(ast, list):
         logger.critical('Expecting AST as a list, got {} instead.', ast)
