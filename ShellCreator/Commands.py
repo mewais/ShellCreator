@@ -172,8 +172,8 @@ commands['set'] = Set
 def addCommand(name, cls):
     if name in commands:
         logger.critical('A command with the same name {} already exists', name)
-        exit(16)
+        exit(7)
     if name is None or name == '':
         logger.critical('Please specify a valid name')
-        exit(17)
+        exit(8)
     commands[name] = cls
