@@ -27,6 +27,8 @@ The shell uses the same python arithmetic operators for convenience, it also mai
 | and                  | Logical AND                                       |
 | or                   | Logical OR                                        |
 
+**WARNING:** Chaining comparison arguments will have a different effect from python. The shell will parse them one by one, in other words: `a < b > c` will be parsed as `(a < b) > c` rather than `a < b and b > c`
+
 ### Variables
 The shell can handle saving, deleting, and accessing variables in the following ways:
 
