@@ -76,4 +76,10 @@ class ReadFile(Command):
 The shell uses `logging` for logging, with the namespace `SHELL`. It utilizes [this formatter](https://github.com/davidohana/colargulog) to better format and colorize logging. It also uses `prompt_toolkit`'s styling to style the prompt itself. You can refer to the examples or to `prompt_toolkit`'s documentation for more details
 
 ## Prerequisites and Installation
-TODO
+You can install by simply running `pip3 install ShellCreator`
+
+The library depends on the following libraries:
+- Pygments
+- prompt_toolkit
+- docopt
+- pyparsing
