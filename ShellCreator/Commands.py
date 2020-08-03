@@ -4,7 +4,7 @@ import docopt
 import logging
 import pyparsing
 
-from Variables import variables, parseEquation, evaluateEquation
+from .Variables import variables, parseEquation, evaluateEquation
 
 logger = logging.getLogger('Shell')
 commands = {}
@@ -67,6 +67,8 @@ class Help(Command):
 
     @classmethod
     def action(cls):
+        if cls.args is None:
+            cls.args = {'--commands': True, '--variables': False}
         if cls.args['--commands'] is not None:
             print('Commands: ')
             for command in commands:
@@ -76,7 +78,7 @@ class Help(Command):
             print('Variables: ')
             for variable in variables:
                 print('\t- ' + variable)
-            print('Run `echo var-name` to get the value of the variable.')
+            print('Run `echo $var-name` to get the value of the variable.')
 commands['help'] = Help
 
 # Reading/Writing Variables
@@ -166,3 +168,12 @@ class Set(Command):
             # Already handled inside parseEquation
             pass
 commands['set'] = Set
+
+def addCommand(name, cls):
+    if name in commands:
+        logger.critical('A command with the same name {} already exists', name)
+        exit(16)
+    if name is None or name == '':
+        logger.critical('Please specify a valid name')
+        exit(17)
+    commands[name] = cls

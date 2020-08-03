@@ -7,8 +7,8 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.lexers import PygmentsLexer
 from pygments.lexers.shell import BashLexer
 
-from Commands import commands, Command
-from Utils.ColoredLogs import ColorizedArgsFormatter
+from .Commands import commands, Command
+from .Utils.ColoredLogs import ColorizedArgsFormatter
 
 class Shell:
     def createLogging(self, formatter='SHELL %(levelname)s: %(message)s', enable_colors=True):
@@ -39,24 +39,24 @@ class Shell:
                 try:
                     self.script = open(script, 'r')
                 except Exception as e:
-                    logger.error('Could not open script. Caused by:\n\t{}', e)
+                    self.logger.error('Could not open script. Caused by:\n\t{}', e)
                     exit(1)
             # Run the commands in it one by one
             user_command = script.readline()
             if not user_command:
                 script.close()
                 break
-            runCommand(user_command)
+            self.runCommand(user_command)
         # If we come here, a script finished running, give a shell
-        startPrompt(prompt, style, history)
+        self.startPrompt(prompt, style, history)
 
-    def startPrompt(prompt, style=None, history='.shell.history'):
+    def startPrompt(self, prompt_str, style=None, history='.shell.history'):
         while True:
             # Start the prompt, add styles in the same manner as prompt_toolkit
-            user_command = prompt(prompt, style=style, history=FileHistory(history), lexer=PygmentsLexer(BashLexer))
-            runCommand(user_command)
+            user_command = prompt(prompt_str, style=style, history=FileHistory(history), lexer=PygmentsLexer(BashLexer))
+            self.runCommand(user_command)
 
-    def runCommand(user_command):
+    def runCommand(self, user_command):
         # Ignore empty lines and comments
         if user_command == '' or user_command[0] == '#':
             return
@@ -70,9 +70,9 @@ class Shell:
             elif len(user_command) == 1:
                 commands[command].getArgs('')
             else:
-                logger.critical('Failed to split command correctly')
+                self.logger.critical('Failed to split command correctly')
                 exit(2)
             commands[command].action()
         else:
-            logger.error('Unknown command, run `help` to find all supported commands.')
+            self.logger.error('Unknown command, run `help` to find all supported commands.')
         return

@@ -4,8 +4,8 @@ import pyparsing
 import logging
 import operator
 
-from Utils.StringUtils import stringToNumber
-from Utils.Operators import operator_and, operator_or
+from .Utils.StringUtils import stringToNumber
+from .Utils.Operators import operator_and, operator_or
 
 logger = logging.getLogger('Shell')
 builtin_variables = {}
