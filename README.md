@@ -63,13 +63,12 @@ class ReadFile(Command):
       -f FORMAT, --format=FORMAT    The format of the file to read
   '''
 
-  @classmethod
-  def action(cls):
-      print(cls.args)
-      print(cls.args['FORMAT'])
-      print(cls.args['FILE'])
+  def action(self):
+      print(self.args)
+      print(self.args['FORMAT'])
+      print(self.args['FILE'])
 
-  addCommand('read_file', ReadFile)
+  shell.addCommand('read_file', ReadFile)
 ```
 
 ### Styling
