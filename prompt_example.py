@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from ShellCreator.Shell import Shell
-from ShellCreator.Commands import Command, addCommand
+from ShellCreator.Commands import Command
 from prompt_toolkit.styles import Style
 
 # Styling shell
@@ -15,7 +15,7 @@ prompt = [
 ]
 
 # Starting the shell
-shell = Shell()
+shell = Shell(prompt, style=style, history='prompt.history')
 shell.createLogging()
 shell.setVerbosity('DEBUG')
-shell.startPrompt(prompt, style=style, history='prompt.history')
+shell.startPrompt()

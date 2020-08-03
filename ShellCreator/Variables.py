@@ -7,8 +7,6 @@ import operator
 from .Utils.Operators import operator_and, operator_or
 
 logger = logging.getLogger('Shell')
-builtin_variables = {}
-variables = {}
 
 variable_name = pyparsing.Combine(pyparsing.Literal('$') + pyparsing.Word(pyparsing.alphas, pyparsing.alphanums + '_'))
 integer = pyparsing.pyparsing_common.signed_integer
@@ -56,10 +54,12 @@ def parseEquation(text):
     logger.debug('Parsed function: {}', function)
     return function
 
-def evaluateEquation(ast):
+def evaluateEquation(ast, builtin_variables, variables):
     def evaluateString(string):
         if string[0] == '$':
-            if string[1:] in variables:
+            if string[1:] in builtin_variables:
+                value = builtin_variables[string[1:]]
+            elif string[1:] in variables:
                 value = variables[string[1:]]
             else:
                 logger.error('Variable {} does not exist.', string[1:])
@@ -80,18 +80,20 @@ def evaluateEquation(ast):
         exit(5)
 
     if len(ast) == 2:
-        value = evaluateEquation(ast[1])
+        value = evaluateEquation(ast[1], builtin_variables, variables)
         value = unary_operators[ast[0]](value)
         return value
     elif ast[1] in right_binary_operators:
-        value = evaluateEquation(ast[-1])
+        value = evaluateEquation(ast[-1], builtin_variables, variables)
         for i in range(len(ast)-2, -1, -2):
-            value = right_binary_operators[ast[i]](evaluateEquation(ast[i-1]), value)
+            tmp_value = evaluateEquation(ast[i-1], builtin_variables, variables)
+            value = right_binary_operators[ast[i]](tmp_value, value)
         return value
     elif ast[1] in left_binary_operators:
-        value = evaluateEquation(ast[0])
+        value = evaluateEquation(ast[0], builtin_variables, variables)
         for i in range(1, len(ast), 2):
-            value = left_binary_operators[ast[i]](value, evaluateEquation(ast[i+1]))
+            tmp_value = evaluateEquation(ast[i+1], builtin_variables, variables)
+            value = left_binary_operators[ast[i]](value, tmp_value)
         return value
     else:
         logger.critical('AST includes an unknown binary operand {}.', key)
