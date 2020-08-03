@@ -97,6 +97,9 @@ class Echo(Command):
 
     @classmethod
     def action(cls):
+        if cls.args is None:
+            # Used the help flag
+            return
         if cls.args['EXPR'] is None:
             logger.error('Must specify an expression to echo.')
             return
@@ -123,6 +126,9 @@ class Unset(Command):
 
     @classmethod
     def action(cls):
+        if cls.args is None:
+            # Used the help flag
+            return
         if cls.args['NAME'] is None:
             logger.error('Must specify a variable to unset.')
             return
@@ -150,6 +156,9 @@ class Set(Command):
 
     @classmethod
     def action(cls):
+        if cls.args is None:
+            # Used the help flag
+            return
         if cls.args['EXPR'] is None:
             logger.error('Must specify an assignment to set.')
             return
