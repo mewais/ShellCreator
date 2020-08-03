@@ -4,7 +4,7 @@ import docopt
 import logging
 import pyparsing
 
-from .Variables import parseEquation, evaluateEquation
+from .Expressions import parseExpression, evaluateExpression
 
 logger = logging.getLogger('Shell')
 
@@ -102,11 +102,11 @@ class Echo(Command):
             logger.error('Must specify an expression to echo.')
             return
         try:
-            ast = parseEquation(self.args['EXPR'])
-            value = evaluateEquation(ast, self.shell.builtin_variables, self.shell.variables)
+            ast = parseExpression(self.args['EXPR'])
+            value = evaluateExpression(ast, self.shell.builtin_variables, self.shell.variables)
             print(value)
         except NameError as e:
-            # Already handled inside parseEquation
+            # Already handled inside parseExpression
             pass
 
 class Unset(Command):
@@ -170,11 +170,11 @@ class Set(Command):
             logger.error('A builtin variable with the same name exists.')
             return
         try:
-            ast = parseEquation(splits[1])
-            value = evaluateEquation(ast, self.shell.builtin_variables, self.shell.variables)
+            ast = parseExpression(splits[1])
+            value = evaluateExpression(ast, self.shell.builtin_variables, self.shell.variables)
             self.shell.variables[splits[0]] = value
         except NameError as e:
-            # Already handled inside parseEquation
+            # Already handled inside parseExpression
             pass
 
 class Source(Command):
@@ -197,4 +197,4 @@ class Source(Command):
         if self.args['FILE'] is None:
             logger.error('Must specify a file to source.')
             return
-        self.shell.runScript(self.args['FILE'])
+        self.shell.runScript(self.args['FILE'], shell_after=False)

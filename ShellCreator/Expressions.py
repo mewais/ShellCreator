@@ -44,7 +44,7 @@ left_binary_operators = {
     'or': operator_or,
 }
 
-def parseEquation(text):
+def parseExpression(text):
     # Parse things from the shell, these can be assignments to
     # variables, or conditions of if and while.
     # TODO: add string parsing
@@ -54,7 +54,7 @@ def parseEquation(text):
     logger.debug('Parsed function: {}', function)
     return function
 
-def evaluateEquation(ast, builtin_variables, variables):
+def evaluateExpression(ast, builtin_variables, variables):
     def evaluateString(string):
         if string[0] == '$':
             if string[1:] in builtin_variables:
@@ -80,19 +80,19 @@ def evaluateEquation(ast, builtin_variables, variables):
         exit(5)
 
     if len(ast) == 2:
-        value = evaluateEquation(ast[1], builtin_variables, variables)
+        value = evaluateExpression(ast[1], builtin_variables, variables)
         value = unary_operators[ast[0]](value)
         return value
     elif ast[1] in right_binary_operators:
-        value = evaluateEquation(ast[-1], builtin_variables, variables)
+        value = evaluateExpression(ast[-1], builtin_variables, variables)
         for i in range(len(ast)-2, -1, -2):
-            tmp_value = evaluateEquation(ast[i-1], builtin_variables, variables)
+            tmp_value = evaluateExpression(ast[i-1], builtin_variables, variables)
             value = right_binary_operators[ast[i]](tmp_value, value)
         return value
     elif ast[1] in left_binary_operators:
-        value = evaluateEquation(ast[0], builtin_variables, variables)
+        value = evaluateExpression(ast[0], builtin_variables, variables)
         for i in range(1, len(ast), 2):
-            tmp_value = evaluateEquation(ast[i+1], builtin_variables, variables)
+            tmp_value = evaluateExpression(ast[i+1], builtin_variables, variables)
             value = left_binary_operators[ast[i]](value, tmp_value)
         return value
     else:
