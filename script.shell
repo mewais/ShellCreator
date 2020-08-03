@@ -1,0 +1,6 @@
+# This is a comment
+set var1=5 * 200 ** -2
+echo $var1
+source script2.shell
+echo $var2
+exit

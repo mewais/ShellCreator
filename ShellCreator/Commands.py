@@ -176,3 +176,25 @@ class Set(Command):
         except NameError as e:
             # Already handled inside parseEquation
             pass
+
+class Source(Command):
+    split=False
+    usage='''
+    source
+
+    Usage:
+        source -h
+        source FILE
+
+    Options:
+        -h, --help                              Print this help message
+    '''
+
+    def action(self):
+        if self.args is None:
+            # Used the help flag
+            return
+        if self.args['FILE'] is None:
+            logger.error('Must specify a file to source.')
+            return
+        self.shell.runScript(self.args['FILE'])
