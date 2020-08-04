@@ -8,6 +8,7 @@ from prompt_toolkit.lexers import PygmentsLexer
 from pygments.lexers.shell import BashLexer
 
 from .Commands import *
+from .Expressions import parseExpression, evaluateExpression
 from .Utils.ColoredLogs import ColorizedArgsFormatter
 
 class Shell:
@@ -24,6 +25,8 @@ class Shell:
         self.commands['unset'] = Unset(self)
         self.commands['set'] = Set(self)
         self.commands['source'] = Source(self)
+        self.inside_if = False
+        self.break_if = False
 
     def createLogging(self, formatter='SHELL %(levelname)s: %(message)s', enable_colors=True, verbosity='INFO'):
         self.logger = logging.getLogger('Shell')
@@ -80,14 +83,69 @@ class Shell:
             user_command = prompt(self.prompt, style=self.style, history=FileHistory(self.history), lexer=PygmentsLexer(BashLexer))
             self.runCommand(user_command)
 
-    def runCommand(self, user_command):
+    def runCommand(self, entire_command):
         # Ignore empty lines and comments
-        if user_command == '' or user_command[0] == '#':
+        if (entire_command == '' or entire_command[0] == '#') and not self.inside_if:
             return
         # Find the called command first
-        user_command = user_command.split(' ', 1)
+        user_command = entire_command.split(' ', 1)
         command = user_command[0]
-        if command in self.commands:
+        if command == 'if':
+            # If the command is an if, elif, or else, handle it
+            self.inside_if = True
+            # Change the prompt
+            self.orig_prompt = self.prompt
+            self.orig_style = self.style
+            if isinstance(self.orig_prompt, str):
+                self.prompt = '*' * len(self.orig_prompt)
+            else:
+                length = 0
+                for element in self.orig_prompt:
+                    length += len(element[1])
+                self.prompt = '*' * length
+            self.style = None
+            # Create two lists to track commands inside each 
+            # possible if. The first list contains the expressions
+            # while the second is a list of lists containing 
+            # the commands inside each if
+            self.Ifs = [user_command[1]]
+            self.IfCommands = [[]]
+        elif command == 'elif':
+            # Add the new condition to the lists
+            self.Ifs.append(user_command[1])
+            self.IfCommands.append([])
+        elif command == 'else':
+            # Add an empty place in the Ifs list
+            self.Ifs.append(None)
+            self.IfCommands.append([])
+        elif self.inside_if:
+            # Handle exit condition
+            if entire_command == '':
+                if self.break_if:
+                    self.break_if = False
+                    self.inside_if = False
+                    # Check all conditions to find the correct one
+                    for i, if_condition in enumerate(self.Ifs):
+                        try:
+                            ast = parseExpression(if_condition)
+                            value = evaluateExpression(ast, self.builtin_variables, self.variables)
+                        except NameError as e:
+                            pass
+                        if value:
+                            # Run the commands in those condition
+                            for command in self.IfCommands[i]:
+                                self.runCommand(command)
+                    # Return prompt to normal
+                    self.prompt = self.orig_prompt
+                    self.style = self.orig_style
+                else:
+                    self.break_if = True
+            else:
+                self.break_if = False
+            # Or it is a command inside if, save, don't run
+            self.IfCommands[-1].append(entire_command)
+        elif command in self.commands:
+            # Otherwise it is a normal command
             # Run the command
             if len(user_command) == 2:
                 self.commands[command].getArgs(user_command[1])
