@@ -49,7 +49,7 @@ def parseExpression(text):
     # variables, or conditions of if and while.
     # TODO: add string parsing
     function = parser.parseString(text)[0]
-    if not isinstance(function, str):
+    if not isinstance(function, str) and not isinstance(function, int) and not isinstance(function, float):
         function = function.asList()
     logger.debug('Parsed function: {}', function)
     return function
