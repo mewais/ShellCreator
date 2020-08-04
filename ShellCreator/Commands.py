@@ -108,6 +108,8 @@ class Echo(Command):
         except NameError as e:
             # Already handled inside parseExpression
             pass
+        except pyparsing.ParseException as e:
+            logger.error('Couldn\'t parse expression {}.', self.args['EXPR'])
 
 class Unset(Command):
     usage='''
@@ -172,10 +174,12 @@ class Set(Command):
         try:
             ast = parseExpression(splits[1])
             value = evaluateExpression(ast, self.shell.builtin_variables, self.shell.variables)
-            self.shell.variables[splits[0]] = value
+            self.shell.variables[splits[0].replace(' ', '')] = value
         except NameError as e:
             # Already handled inside parseExpression
             pass
+        except pyparsing.ParseException as e:
+            logger.error('Couldn\'t parse expression {}.', self.args['EXPR'])
 
 class Source(Command):
     split=False
