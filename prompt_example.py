@@ -11,7 +11,7 @@ style = Style.from_dict({
 })
 prompt = [
     ('class:program', 'Example'),
-    ('class:separator', '>> ')
+    ('class:separator', '>>')
 ]
 
 # Starting the shell

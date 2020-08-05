@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 from prompt_toolkit import prompt
 from prompt_toolkit.styles import Style
@@ -78,8 +79,13 @@ class Shell:
 
     def startPrompt(self):
         while True:
+            final_prompt = copy.deepcopy(self.prompt)
+            if isinstance(self.prompt, str):
+                final_prompt += ' '
+            else:
+                final_prompt.append((final_prompt[-1][0], ' '))
             # Start the prompt, add styles in the same manner as prompt_toolkit
-            user_command = prompt(self.prompt, style=self.style, history=FileHistory(self.history), lexer=PygmentsLexer(BashLexer))
+            user_command = prompt(final_prompt, style=self.style, history=FileHistory(self.history), lexer=PygmentsLexer(BashLexer))
             self.runCommand(user_command)
 
     def runCommand(self, entire_command):
@@ -131,6 +137,7 @@ class Shell:
                     pass
                 except pyparsing.ParseException as e:
                     logger.error('Couldn\'t parse expression {}.', self.args['EXPR'])
+                    continue
                 if value:
                     # Run the commands in those condition
                     for command in self.IfCommands[i]:
