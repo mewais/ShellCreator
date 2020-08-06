@@ -18,4 +18,24 @@ prompt = [
 shell = Shell(prompt, style=style, history='prompt.history')
 shell.createLogging()
 shell.setVerbosity('DEBUG')
+
+# Adding commands
+class ReadFile(Command):
+    usage='''
+    read_file
+
+    Usage:
+        read_file -h
+        read_file [--f FORMAT] FILE
+
+    Options:
+        -h, --help                    Print this help message
+        -f FORMAT, --format=FORMAT    The format of the file to read
+    '''
+
+    def action(self):
+        print(self.args)
+shell.addCommand('read_file', ReadFile)
+
+# Running
 shell.startPrompt()

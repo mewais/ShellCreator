@@ -6,9 +6,9 @@ from prompt_toolkit import prompt
 from prompt_toolkit.styles import Style
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.lexers import PygmentsLexer
-from pygments.lexers.shell import BashLexer
 
 from .Commands import *
+from .Highlighter import *
 from .Expressions import parseExpression, evaluateExpression
 from .Utils.ColoredLogs import ColorizedArgsFormatter
 
@@ -20,12 +20,12 @@ class Shell:
         self.builtin_variables = {}
         self.variables = {}
         self.commands = {}
-        self.commands['exit'] = Exit(self)
-        self.commands['help'] = Help(self)
-        self.commands['echo'] = Echo(self)
-        self.commands['unset'] = Unset(self)
-        self.commands['set'] = Set(self)
-        self.commands['source'] = Source(self)
+        self.addCommand('exit', Exit)
+        self.addCommand('help', Help)
+        self.addCommand('echo', Echo)
+        self.addCommand('unset', Unset)
+        self.addCommand('set', Set)
+        self.addCommand('source', Source)
         self.inside_if = False
 
     def createLogging(self, formatter='SHELL %(levelname)s: %(message)s', enable_colors=True, verbosity='INFO'):
@@ -50,7 +50,7 @@ class Shell:
         elif verbosity == 'CRITICAL':
             self.logger.setLevel(logging.CRITICAL)
 
-    def addCommand(name, cls):
+    def addCommand(self, name, cls):
         if name in self.commands:
             logger.critical('A command with the same name {} already exists', name)
             exit(7)
@@ -58,6 +58,7 @@ class Shell:
             logger.critical('Please specify a valid name')
             exit(8)
         self.commands[name] = cls(self)
+        ShellLexer.addCommand(name)
 
     def runScript(self, script, shell_after=True):
         # If script specified, open its file
@@ -85,7 +86,7 @@ class Shell:
             else:
                 final_prompt.append((final_prompt[-1][0], ' '))
             # Start the prompt, add styles in the same manner as prompt_toolkit
-            user_command = prompt(final_prompt, style=self.style, history=FileHistory(self.history), lexer=PygmentsLexer(BashLexer))
+            user_command = prompt(final_prompt, style=self.style, history=FileHistory(self.history), lexer=PygmentsLexer(ShellLexer))
             self.runCommand(user_command)
 
     def runCommand(self, entire_command):
@@ -134,7 +135,7 @@ class Shell:
                         ast = parseExpression(if_condition)
                         value = evaluateExpression(ast, self.builtin_variables, self.variables)
                 except NameError as e:
-                    pass
+                    continue
                 except pyparsing.ParseException as e:
                     logger.error('Couldn\'t parse expression {}.', self.args['EXPR'])
                     continue
