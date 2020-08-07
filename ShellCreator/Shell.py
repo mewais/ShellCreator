@@ -26,11 +26,11 @@ class Shell:
         self.addCommand('unset', Unset)
         self.addCommand('set', Set)
         self.addCommand('source', Source)
-        self.inside_if = 0
+        self.inside_control = 0
         self.orig_prompt = []
         self.orig_style = []
-        self.ifs = []
-        self.if_commands = []
+        self.conditions = []
+        self.condition_commands = []
 
     def createLogging(self, formatter='SHELL %(levelname)s: %(message)s', enable_colors=True, verbosity='INFO'):
         self.logger = logging.getLogger('Shell')
@@ -102,8 +102,8 @@ class Shell:
         command = user_command[0]
         if command == 'if':
             # If the command is an if, elif, or else, handle it
-            self.inside_if += 1
-            if self.inside_if == 1:
+            self.inside_control += 1
+            if self.inside_control == 1:
                 # Change the prompt
                 self.orig_prompt.append(self.prompt)
                 self.orig_style.append(self.style)
@@ -119,40 +119,52 @@ class Shell:
                 # possible if. The first list contains the expressions
                 # while the second is a list of lists containing 
                 # the commands inside each if
-                self.ifs.append([user_command[1]])
-                self.if_commands.append([[]])
+                self.conditions.append([user_command[1]])
+                self.condition_commands.append([[]])
             else:
                 # Or it is a command inside if, save, don't run
-                self.if_commands[-1][-1].append(entire_command)
-        elif self.inside_if == 1 and command == 'elseif':
-            # Add the new condition to the lists
-            self.ifs[-1].append(user_command[1])
-            self.if_commands[-1].append([])
-        elif self.inside_if == 1 and command == 'else':
-            # Add an empty place in the ifs list
-            self.ifs[-1].append(None)
-            self.if_commands[-1].append([])
+                self.condition_commands[-1][-1].append(entire_command)
+        elif command == 'elseif':
+            if self.inside_control == 1:
+                # Add the new condition to the lists
+                self.conditions[-1].append(user_command[1])
+                self.condition_commands[-1].append([])
+            elif self.inside_control == 0:
+                self.logger.error('elseif without if')
+            else:
+                # We're inside a parent if, just save
+                self.condition_commands[-1][-1].append(entire_command)
+        elif command == 'else':
+            if self.inside_control == 1:
+                # Add an empty place in the conditions list
+                self.conditions[-1].append(None)
+                self.condition_commands[-1].append([])
+            elif self.inside_control == 0:
+                self.logger.error('else without if')
+            else:
+                # We're inside a parent if, just save
+                self.condition_commands[-1][-1].append(entire_command)
         elif entire_command.replace(' ', '') == 'endif':
-            self.inside_if -= 1
-            if not self.inside_if:
+            self.inside_control -= 1
+            if not self.inside_control:
                 # Check all conditions to find the correct one
-                index = len(self.ifs) - 1
-                for i, if_condition in enumerate(self.ifs[index]):
+                index = len(self.conditions) - 1
+                for i, if_condition in enumerate(self.conditions[index]):
                     try:
-                        if i == len(self.ifs[index]) - 1 and self.ifs[index][i] == None:
+                        if i == len(self.conditions[index]) - 1 and self.conditions[index][i] == None:
                             # If this is an else, and nothing before it is taken
                             value = True
                         else:
                             ast = parseExpression(if_condition)
                             value = evaluateExpression(ast, self.builtin_variables, self.variables)
                     except NameError as e:
-                        continue
+                        break
                     except pyparsing.ParseException as e:
-                        logger.error('Couldn\'t parse expression {}.', self.args['EXPR'])
-                        continue
+                        logger.error('Couldn\'t parse expression {}.', if_condition)
+                        break
                     if value:
                         # Run the commands in those condition
-                        for command in self.if_commands[index][i]:
+                        for command in self.condition_commands[index][i]:
                             self.runCommand(command)
                         break
                 # Return prompt to normal
@@ -160,25 +172,26 @@ class Shell:
                 self.style = self.orig_style[-1]
                 del self.orig_prompt[-1]
                 del self.orig_style[-1]
-                del self.ifs[-1]
-                del self.if_commands[-1]
+                del self.conditions[-1]
+                del self.condition_commands[-1]
             else:
                 # Or it is a command inside if, save, don't run
-                self.if_commands[-1][-1].append(entire_command)
-        elif self.inside_if:
-            # Or it is a command inside if, save, don't run
-            self.if_commands[-1][-1].append(entire_command)
+                self.condition_commands[-1][-1].append(entire_command)
         elif command in self.commands:
-            # Otherwise it is a normal command
-            # Run the command
-            if len(user_command) == 2:
-                self.commands[command].getArgs(user_command[1])
-            elif len(user_command) == 1:
-                self.commands[command].getArgs('')
+            if self.inside_control:
+                # Or it is a command inside if, save, don't run
+                self.condition_commands[-1][-1].append(entire_command)
             else:
-                self.logger.critical('Failed to split command correctly')
-                exit(2)
-            self.commands[command].action()
+                # Otherwise it is a normal command
+                # Run the command
+                if len(user_command) == 2:
+                    self.commands[command].getArgs(user_command[1])
+                elif len(user_command) == 1:
+                    self.commands[command].getArgs('')
+                else:
+                    self.logger.critical('Failed to split command correctly')
+                    exit(2)
+                self.commands[command].action()
         else:
             self.logger.error('Unknown command {}, run `help` to find all supported commands.', command)
         return
