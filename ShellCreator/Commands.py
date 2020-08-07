@@ -6,11 +6,10 @@ import pyparsing
 
 from .Expressions import parseExpression, evaluateExpression
 
-logger = logging.getLogger('Shell')
-
 class Command:
     usage=''
     split=True
+    logger=logging.getLogger('Shell')
 
     def __init__(self, shell):
         self.shell = shell
@@ -27,7 +26,7 @@ class Command:
         except SystemExit:
             pass
         except docopt.DocoptLanguageError:
-            logger.critical('Documentation of command is not provided correctly.')
+            self.logger.critical('Documentation of command is not provided correctly.')
             exit(3)
 
     def action(self):
@@ -99,7 +98,7 @@ class Echo(Command):
             # Used the help flag
             return
         if self.args['EXPR'] is None:
-            logger.error('Must specify an expression to echo.')
+            self.logger.error('Must specify an expression to echo.')
             return
         try:
             ast = parseExpression(self.args['EXPR'])
@@ -109,7 +108,7 @@ class Echo(Command):
             # Already handled inside parseExpression
             pass
         except pyparsing.ParseException as e:
-            logger.error('Couldn\'t parse expression {}.', self.args['EXPR'])
+            self.logger.error('Couldn\'t parse expression {}.', self.args['EXPR'])
 
 class Unset(Command):
     usage='''
@@ -128,16 +127,16 @@ class Unset(Command):
             # Used the help flag
             return
         if self.args['NAME'] is None:
-            logger.error('Must specify a variable to unset.')
+            self.logger.error('Must specify a variable to unset.')
             return
         if self.args['NAME'][0] != '$':
-            logger.error('Variables must be prefixed with $.')
+            self.logger.error('Variables must be prefixed with $.')
             return
         if self.args['NAME'][1:] in self.shell.builtin_variables:
-            logger.error('Cannot unset builtin shell variables.')
+            self.logger.error('Cannot unset builtin shell variables.')
             return
         if self.args['NAME'][1:] not in self.shell.variables:
-            logger.error('Variable does not exist.')
+            self.logger.error('Variable does not exist.')
             return
         del self.shell.variables[self.args['NAME'][1:]]
 
@@ -159,17 +158,17 @@ class Set(Command):
             # Used the help flag
             return
         if self.args['EXPR'] is None:
-            logger.error('Must specify an assignment to set.')
+            self.logger.error('Must specify an assignment to set.')
             return
         splits = self.args['EXPR'].split('=')
         if len(splits) != 2:
-            logger.error('Invalid assignment.')
+            self.logger.error('Invalid assignment.')
             return
         if splits[0] == '' or splits[1] == '':
-            logger.error('Invalid assignment.')
+            self.logger.error('Invalid assignment.')
             return
         if splits[0] in self.shell.builtin_variables:
-            logger.error('A builtin variable with the same name exists.')
+            self.logger.error('A builtin variable with the same name exists.')
             return
         try:
             ast = parseExpression(splits[1])
@@ -179,7 +178,7 @@ class Set(Command):
             # Already handled inside parseExpression
             pass
         except pyparsing.ParseException as e:
-            logger.error('Couldn\'t parse expression {}.', self.args['EXPR'])
+            self.logger.error('Couldn\'t parse expression {}.', self.args['EXPR'])
 
 class Source(Command):
     split=False
@@ -199,6 +198,6 @@ class Source(Command):
             # Used the help flag
             return
         if self.args['FILE'] is None:
-            logger.error('Must specify a file to source.')
+            self.logger.error('Must specify a file to source.')
             return
         self.shell.runScript(self.args['FILE'], shell_after=False)

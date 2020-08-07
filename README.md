@@ -97,7 +97,7 @@ class ReadFile(Command):
 ### Styling and Logging
 The shell uses `logging` for logging, with the namespace `SHELL`. It utilizes [this formatter](https://github.com/davidohana/colargulog) to better format and colorize logging. It also uses `prompt_toolkit`'s styling to style the prompt itself. You can refer to the examples or to `prompt_toolkit`'s documentation for more details
 
-The logging format is as follows: `logger.error('A logging message {}', value)`
+The logging format is as follows: `self.logger.error('A logging message {}', value)` where self refers to the command class you create.
 
 ## Prerequisites and Installation
 You can install by simply running `pip3 install ShellCreator`
