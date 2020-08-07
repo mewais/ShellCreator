@@ -11,7 +11,11 @@ logger = logging.getLogger('Shell')
 variable_name = pyparsing.Combine(pyparsing.Literal('$') + pyparsing.Word(pyparsing.alphas, pyparsing.alphanums + '_'))
 integer = pyparsing.pyparsing_common.signed_integer
 double = pyparsing.pyparsing_common.real
-parser = pyparsing.operatorPrecedence(variable_name | double | integer, [
+true = pyparsing.Keyword('True')
+false = pyparsing.Keyword('False')
+string = pyparsing.QuotedString('\'', escChar='\\') | pyparsing.QuotedString('\"', escChar='\\')
+parser = pyparsing.operatorPrecedence(variable_name | double | integer | string | 
+                                true | false, [
                                 ('**', 2, pyparsing.opAssoc.RIGHT),
                                 ('-', 1, pyparsing.opAssoc.RIGHT),
                                 (pyparsing.oneOf('* / // %'), 2, pyparsing.opAssoc.LEFT),
@@ -64,9 +68,12 @@ def evaluateExpression(ast, builtin_variables, variables):
             else:
                 logger.error('Variable {} does not exist.', string[1:])
                 raise NameError('Variable does not exist')
+        elif string == 'True':
+            value = True
+        elif string == 'False':
+            value = False
         else:
-            logger.critical('All strings must be variable names. Got {}', string)
-            exit(4)
+            value = string
         return value
     # Eval can be dangerous, so we do this by hand
     if isinstance(ast, str):

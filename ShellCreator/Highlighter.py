@@ -22,6 +22,8 @@ class ShellLexer(RegexLexer):
                 (r'\$[a-zA-Z_]\w*', Name.Variable),
                 (r'\d+(\.\d+)\b', Number),
                 (r'\d+\b', Number),
+                (r'\bTrue\b', Number),
+                (r'\bFalse\b', Number),
                 ('\\b(' + cls.commands + ')\\b', Keyword),
             ]
         }
