@@ -30,6 +30,7 @@ class Shell:
         self.orig_prompt = []
         self.orig_style = []
         self.conditions = []
+        self.condition_types = []
         self.condition_commands = []
 
     def createLogging(self, formatter='SHELL %(levelname)s: %(message)s', enable_colors=True, verbosity='INFO'):
@@ -100,9 +101,10 @@ class Shell:
         # Find the called command first
         user_command = entire_command.split(' ', 1)
         command = user_command[0]
-        if command == 'if':
-            # If the command is an if, elif, or else, handle it
+        if command == 'if' or command == 'while':
+            # If the command is an if or a while, handle it
             self.inside_control += 1
+            self.logger.debug('{} level: {}', command, self.inside_control)
             if self.inside_control == 1:
                 # Change the prompt
                 self.orig_prompt.append(self.prompt)
@@ -119,63 +121,94 @@ class Shell:
                 # possible if. The first list contains the expressions
                 # while the second is a list of lists containing 
                 # the commands inside each if
+                self.condition_types.append(command)
                 self.conditions.append([user_command[1]])
                 self.condition_commands.append([[]])
             else:
-                # Or it is a command inside if, save, don't run
+                # Or it is a control inside control, save, don't run
                 self.condition_commands[-1][-1].append(entire_command)
-        elif command == 'elseif':
-            if self.inside_control == 1:
+        elif command == 'elif':
+            self.logger.debug('{} level: {}', 'elif', self.inside_control)
+            if self.inside_control == 1 and self.condition_types[-1] == 'if':
                 # Add the new condition to the lists
                 self.conditions[-1].append(user_command[1])
                 self.condition_commands[-1].append([])
-            elif self.inside_control == 0:
-                self.logger.error('elseif without if')
-            else:
-                # We're inside a parent if, just save
+            elif self.inside_control > 1:
+                # We're inside a parent control, just save
                 self.condition_commands[-1][-1].append(entire_command)
+            else:
+                self.logger.error('elif without if')
         elif command == 'else':
-            if self.inside_control == 1:
+            self.logger.debug('{} level: {}', 'else', self.inside_control)
+            if self.inside_control == 1 and self.condition_types[-1] == 'if':
                 # Add an empty place in the conditions list
                 self.conditions[-1].append(None)
                 self.condition_commands[-1].append([])
-            elif self.inside_control == 0:
-                self.logger.error('else without if')
-            else:
-                # We're inside a parent if, just save
+            elif self.inside_control > 1:
+                # We're inside a parent control, just save
                 self.condition_commands[-1][-1].append(entire_command)
-        elif entire_command.replace(' ', '') == 'endif':
+            else:
+                self.logger.error('else without if')
+        elif entire_command.replace(' ', '') == 'end':
+            self.logger.debug('{} level: {}', 'end', self.inside_control)
             self.inside_control -= 1
             if not self.inside_control:
-                # Check all conditions to find the correct one
-                index = len(self.conditions) - 1
-                for i, if_condition in enumerate(self.conditions[index]):
-                    try:
-                        if i == len(self.conditions[index]) - 1 and self.conditions[index][i] == None:
-                            # If this is an else, and nothing before it is taken
-                            value = True
-                        else:
-                            ast = parseExpression(if_condition)
+                if self.condition_types[-1] == 'if':
+                    # Check all conditions to find the correct one
+                    index = len(self.conditions) - 1
+                    for i, if_condition in enumerate(self.conditions[index]):
+                        try:
+                            if i == len(self.conditions[index]) - 1 and self.conditions[index][i] == None:
+                                # If this is an else, and nothing before it is taken
+                                value = True
+                            else:
+                                ast = parseExpression(if_condition)
+                                value = evaluateExpression(ast, self.builtin_variables, self.variables)
+                        except NameError as e:
+                            break
+                        except pyparsing.ParseException as e:
+                            logger.error('Couldn\'t parse condition {}.', if_condition)
+                            break
+                        if value:
+                            # Run the commands in those condition
+                            for command in self.condition_commands[index][i]:
+                                self.runCommand(command)
+                            break
+                elif self.condition_types[-1] == 'while':
+                    # Make sure we have only one condition
+                    if len(self.conditions[-1]) != 1 or len(self.condition_commands[-1]) != 1:
+                        self.logger.fatal('Found while loop with more than one condition: {}, {}.', self.conditions[-1], self.condition_commands[-1])
+                        exit(10)
+                    # Check all conditions to find the correct one
+                    index = len(self.conditions) - 1
+                    while True:
+                        try:
+                            ast = parseExpression(self.conditions[index][0])
                             value = evaluateExpression(ast, self.builtin_variables, self.variables)
-                    except NameError as e:
-                        break
-                    except pyparsing.ParseException as e:
-                        logger.error('Couldn\'t parse expression {}.', if_condition)
-                        break
-                    if value:
-                        # Run the commands in those condition
-                        for command in self.condition_commands[index][i]:
-                            self.runCommand(command)
-                        break
+                        except NameError as e:
+                            break
+                        except pyparsing.ParseException as e:
+                            logger.error('Couldn\'t parse condition {}.', self.conditions[index][0])
+                            break
+                        if value:
+                            # Run the commands in those condition
+                            for command in self.condition_commands[index][0]:
+                                self.runCommand(command)
+                        else:
+                            break
+                else:
+                    self.logger.fatal('Recieved end for something other than if and while {}.', self.condition_types[-1])
+                    exit(9)
                 # Return prompt to normal
                 self.prompt = self.orig_prompt[-1]
                 self.style = self.orig_style[-1]
                 del self.orig_prompt[-1]
                 del self.orig_style[-1]
                 del self.conditions[-1]
+                del self.condition_types[-1]
                 del self.condition_commands[-1]
             else:
-                # Or it is a command inside if, save, don't run
+                # Or it is an end inside control, save, don't run
                 self.condition_commands[-1][-1].append(entire_command)
         elif command in self.commands:
             if self.inside_control:

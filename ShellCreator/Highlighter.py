@@ -8,7 +8,7 @@ class ShellLexer(RegexLexer):
     aliases = ['shell']
     filenames = ['*.shell']
 
-    commands = 'if|elseif|else|endif|while|endwhile'
+    commands = 'if|while|elif|else|end'
 
     @classmethod
     def addCommand(cls, name):
