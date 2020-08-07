@@ -14,6 +14,13 @@ use the following commands to get help and exit:
 - `help --variables` will give you the list of all variables in the shell
 - `exit` to exit the shell
 
+### Data Types
+The supported types are the same basic types of python. Those are:
+- Integers
+- Floats
+- Booleans (True or False)
+- Strings (single and double quoted, escaped by /)
+
 ### Operators
 The shell uses the same python arithmetic operators for convenience, it also maintains their precedence and associativity. The operators are:
 | Operator             | Description                                       |
@@ -43,9 +50,25 @@ When dealing with variables pay attention to the following points:
 - Setting an existing variable will overwrite its existing value.
 - Unsetting or Echoing a non-existent variable will generate an error.
 
+There are builtin variables, those are variables that can be set to and modified, but never unset. A library user can choose to add those as needed by using the function call `shell.addBuiltinVariable`
 
 ### If and While
-TODO
+The shell supports if conditions and while loops, the syntax is as follows:
+```
+if $var1
+  command
+  command
+elif $var2 > 50
+  command
+else
+  command
+  command
+end
+
+while $var3 + 40 < $var4
+  command
+end
+```
 
 ### Adding commands
 The Shell Creator utilizes the great [docopt](http://docopt.org/) library to build the commands of the shell (including the builtin ones). There's a base `Command` class that must be inherited and overridden to implement new commands. Example:
@@ -71,8 +94,10 @@ class ReadFile(Command):
   shell.addCommand('read_file', ReadFile)
 ```
 
-### Styling
+### Styling and Logging
 The shell uses `logging` for logging, with the namespace `SHELL`. It utilizes [this formatter](https://github.com/davidohana/colargulog) to better format and colorize logging. It also uses `prompt_toolkit`'s styling to style the prompt itself. You can refer to the examples or to `prompt_toolkit`'s documentation for more details
+
+The logging format is as follows: `logger.error('A logging message {}', value)`
 
 ## Prerequisites and Installation
 You can install by simply running `pip3 install ShellCreator`
