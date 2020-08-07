@@ -65,6 +65,12 @@ class Shell:
         self.commands[name] = cls(self)
         ShellLexer.addCommand(name)
 
+    def addBuiltinVariable(self, name, value):
+        if name in self.builtin_variables:
+            logger.critical('A builtin variable with the same name exists')
+            exit(11)
+        self.builtin_variables[name] = value
+
     def runScript(self, script, shell_after=True):
         # If script specified, open its file
         if script is not None:
