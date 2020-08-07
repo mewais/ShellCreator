@@ -4,7 +4,7 @@ markdown = open('README.md',mode='r')
 requirements = open('requirements.txt', mode='r')
 
 setup(name='ShellCreator',
-    version='0.3',
+    version='0.4',
     description='A library to create command line interfaces.',
     long_description=markdown.read(),
     long_description_content_type='text/markdown',
@@ -12,7 +12,7 @@ setup(name='ShellCreator',
     author='Mohammad Ewais',
     author_email='mewais@ece.utoronto.ca',
     license='MIT',
-    packages=['ShellCreator'],
+    packages=['ShellCreator', 'ShellCreator.Utils'],
     install_requires=[list(filter(None, requirements.read().split('\n')))],
     classifiers=[
         "Programming Language :: Python :: 3",
