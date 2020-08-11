@@ -4,7 +4,7 @@ markdown = open('README.md',mode='r')
 requirements = open('requirements.txt', mode='r')
 
 setup(name='ShellCreator',
-    version='0.4',
+    version='0.4.2',
     description='A library to create command line interfaces.',
     long_description=markdown.read(),
     long_description_content_type='text/markdown',

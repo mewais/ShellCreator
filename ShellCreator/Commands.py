@@ -167,13 +167,14 @@ class Set(Command):
         if splits[0] == '' or splits[1] == '':
             self.logger.error('Invalid assignment.')
             return
-        if splits[0] in self.shell.builtin_variables:
-            self.logger.error('A builtin variable with the same name exists.')
-            return
         try:
             ast = parseExpression(splits[1])
             value = evaluateExpression(ast, self.shell.builtin_variables, self.shell.variables)
-            self.shell.variables[splits[0].replace(' ', '')] = value
+            name = splits[0].replace(' ', '')
+            if name in self.shell.builtin_variables:
+                self.shell.builtin_variables[name] = value
+            else:
+                self.shell.variables[name] = value
         except NameError as e:
             # Already handled inside parseExpression
             pass
