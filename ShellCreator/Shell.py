@@ -10,6 +10,7 @@ from prompt_toolkit.lexers import PygmentsLexer
 from .Commands import *
 from .Highlighter import *
 from .Expressions import parseExpression, evaluateExpression
+from .Indenter import bindings
 from .Utils.ColoredLogs import ColorizedArgsFormatter
 
 class Shell:
@@ -97,13 +98,14 @@ class Shell:
             else:
                 final_prompt.append((final_prompt[-1][0], ' '))
             # Start the prompt, add styles in the same manner as prompt_toolkit
-            user_command = prompt(final_prompt, style=self.style, history=FileHistory(self.history), lexer=PygmentsLexer(ShellLexer))
+            user_command = prompt(final_prompt, style=self.style, history=FileHistory(self.history), lexer=PygmentsLexer(ShellLexer), key_bindings=bindings)
             self.runCommand(user_command)
 
     def runCommand(self, entire_command):
         # Ignore empty lines and comments
         if entire_command == '' or entire_command[0] == '#':
             return
+        entire_command = entire_command.lstrip()
         # Find the called command first
         user_command = entire_command.split(' ', 1)
         command = user_command[0]
