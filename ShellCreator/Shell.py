@@ -8,6 +8,7 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.lexers import PygmentsLexer
 
 from .Commands import *
+from .Completer import updateCompleter
 from .Highlighter import *
 from .Expressions import parseExpression, evaluateExpression
 from .Indenter import bindings
@@ -65,6 +66,7 @@ class Shell:
             exit(8)
         self.commands[name] = cls(self)
         ShellLexer.addCommand(name)
+        self.command_completer = updateCompleter(name, cls)
 
     def addBuiltinVariable(self, name, value):
         if name in self.builtin_variables:
@@ -98,7 +100,7 @@ class Shell:
             else:
                 final_prompt.append((final_prompt[-1][0], ' '))
             # Start the prompt, add styles in the same manner as prompt_toolkit
-            user_command = prompt(final_prompt, style=self.style, history=FileHistory(self.history), lexer=PygmentsLexer(ShellLexer), key_bindings=bindings)
+            user_command = prompt(final_prompt, style=self.style, history=FileHistory(self.history), lexer=PygmentsLexer(ShellLexer), key_bindings=bindings, completer=self.command_completer)
             self.runCommand(user_command)
 
     def runCommand(self, entire_command):

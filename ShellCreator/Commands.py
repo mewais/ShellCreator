@@ -10,6 +10,8 @@ class Command:
     usage=''
     split=True
     logger=logging.getLogger('Shell')
+    word_completer=None
+    file_completer=None
 
     def __init__(self, shell):
         self.shell = shell
@@ -48,29 +50,29 @@ class Exit(Command):
         exit(0)
 
 class Help(Command):
+    word_completer = {'commands': None, 'variables': None, 'all': None}
     usage='''
     help
 
     Usage:
-        help --commands
-        help --variables
-        help --commands --variables
+        help -h
+        help commands
+        help variables
+        help all
 
     Options:
         -h, --help                              Print this help message.
-        -c, --commands                          List all commands.
-        -v, --variables                         List all variables.
     '''
 
     def action(self):
         if self.args is None:
-            self.args = {'--commands': True, '--variables': False}
-        if self.args['--commands'] is not None:
+            return
+        if self.args['commands'] or self.args['all']:
             print('Commands: ')
             for command in self.shell.commands:
                 print('\t- ' + command)
             print('Run `command-name -h` to get info about each command.')
-        if self.args['--variables'] is not None:
+        if self.args['variables'] or self.args['all']:
             print('Builtin Variables: ')
             for variable in self.shell.builtin_variables:
                 print('\t- ' + variable)
@@ -182,6 +184,7 @@ class Set(Command):
             self.logger.error('Couldn\'t parse expression {}.', self.args['EXPR'])
 
 class Source(Command):
+    file_completer = ['sh', 'shell', 'script']
     split=False
     usage='''
     source
