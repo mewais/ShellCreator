@@ -3,15 +3,16 @@ This is a simple python library that can be used to create entire shells for CLI
 - Python like arithmetic operators
 - Setting/Unsetting variables
 - Builtin commands for variable manipulation
-- Builtin support for if statements and while loops (not yet implemented)
-- Easily extensible with new commands through simple class inheritance
+- Builtin support for if statements and while loops
+- Autocompletion for commands and variables
 - Colorful, with nice logging
+- Easily extensible with new commands through simple class inheritance
 
 ## How to use
 ### Help and Exiting
 use the following commands to get help and exit:
-- `help --commands` will give you the list of all commands in the shell
-- `help --variables` will give you the list of all variables in the shell
+- `help commands` will give you the list of all commands in the shell
+- `help variables` will give you the list of all variables in the shell
 - `exit` to exit the shell
 
 ### Data Types
@@ -42,6 +43,7 @@ The shell can handle saving, deleting, and accessing variables in the following 
 ```bash
 echo $var
 set var=$var2 + 485 * 12
+echo "This is $var"
 unset $var
 ```
 When dealing with variables pay attention to the following points:
@@ -93,6 +95,7 @@ class ReadFile(Command):
 
   shell.addCommand('read_file', ReadFile)
 ```
+for more info on other fields that can be overridden check the `ShellCreator/Commands.py` file
 
 ### Styling and Logging
 The shell uses `logging` for logging, with the namespace `SHELL`. It utilizes [this formatter](https://github.com/davidohana/colargulog) to better format and colorize logging. It also uses `prompt_toolkit`'s styling to style the prompt itself. You can refer to the examples or to `prompt_toolkit`'s documentation for more details
