@@ -134,13 +134,27 @@ class Unset(Command):
         if self.args['NAME'][0] != '$':
             self.logger.error('Variables must be prefixed with $.')
             return
-        if self.args['NAME'][1:] in self.shell.builtin_variables:
-            self.logger.error('Cannot unset builtin shell variables.')
-            return
-        if self.args['NAME'][1:] not in self.shell.variables:
-            self.logger.error('Variable does not exist.')
-            return
-        del self.shell.variables[self.args['NAME'][1:]]
+        if self.args['NAME'][0] == '$' and self.args['NAME'][1] != '{':
+            if self.args['NAME'][1:] in self.shell.builtin_variables:
+                self.logger.error('Cannot unset builtin shell variables.')
+                return
+            if self.args['NAME'][1:] not in self.shell.variables:
+                self.logger.error('Variable does not exist.')
+                return
+            del self.shell.variables[self.args['NAME'][1:]]
+            self.shell.completer.deleteVariable(self.args['NAME'][1:])
+        elif self.args['NAME'][0] == '$' and self.args['NAME'][1] == '{':
+            if self.args['NAME'][-1] != '}':
+                self.logger.error('Unbalanced curly brackets.')
+                return
+            if self.args['NAME'][2:-1] in self.shell.builtin_variables:
+                self.logger.error('Cannot unset builtin shell variables.')
+                return
+            if self.args['NAME'][2:-1] not in self.shell.variables:
+                self.logger.error('Variable does not exist.')
+                return
+            del self.shell.variables[self.args['NAME'][2:-1]]
+            self.shell.completer.deleteVariable(self.args['NAME'][2:-1])
 
 class Set(Command):
     split=False
@@ -177,6 +191,7 @@ class Set(Command):
                 self.shell.builtin_variables[name] = value
             else:
                 self.shell.variables[name] = value
+                self.shell.completer.addVariable(name)
         except NameError as e:
             # Already handled inside parseExpression
             pass

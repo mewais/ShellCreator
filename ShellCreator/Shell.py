@@ -8,7 +8,7 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.lexers import PygmentsLexer
 
 from .Commands import *
-from .Completer import updateCompleter
+from .Completer import *
 from .Highlighter import *
 from .Expressions import parseExpression, evaluateExpression
 from .Indenter import bindings
@@ -22,6 +22,7 @@ class Shell:
         self.builtin_variables = {}
         self.variables = {}
         self.commands = {}
+        self.completer = Completer()
         self.addCommand('exit', Exit)
         self.addCommand('help', Help)
         self.addCommand('echo', Echo)
@@ -66,13 +67,14 @@ class Shell:
             exit(8)
         self.commands[name] = cls(self)
         ShellLexer.addCommand(name)
-        self.command_completer = updateCompleter(name, cls)
+        self.completer.addCommand(name, cls)
 
     def addBuiltinVariable(self, name, value):
         if name in self.builtin_variables:
             logger.critical('A builtin variable with the same name exists')
             exit(11)
         self.builtin_variables[name] = value
+        self.completer.addVariable(name)
 
     def runScript(self, script, shell_after=True):
         # If script specified, open its file
@@ -100,14 +102,14 @@ class Shell:
             else:
                 final_prompt.append((final_prompt[-1][0], ' '))
             # Start the prompt, add styles in the same manner as prompt_toolkit
-            user_command = prompt(final_prompt, style=self.style, history=FileHistory(self.history), lexer=PygmentsLexer(ShellLexer), key_bindings=bindings, completer=self.command_completer)
+            user_command = prompt(final_prompt, style=self.style, history=FileHistory(self.history), lexer=PygmentsLexer(ShellLexer), key_bindings=bindings, completer=self.completer.getCompleter())
             self.runCommand(user_command)
 
     def runCommand(self, entire_command):
         # Ignore empty lines and comments
         if entire_command == '' or entire_command[0] == '#':
             return
-        entire_command = entire_command.lstrip()
+        entire_command = entire_command.strip()
         # Find the called command first
         user_command = entire_command.split(' ', 1)
         command = user_command[0]
