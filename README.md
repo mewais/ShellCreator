@@ -1,4 +1,12 @@
 # Shell Creator
+
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/mewais/ShellCreator/graphs/commit-activity)
+[![Python Version](https://img.shields.io/pypi/pyversions/ShellCreator.svg)](https://pypi.org/project/ShellCreator/)
+[![PyPI version shields.io](https://img.shields.io/pypi/v/ShellCreator.svg)](https://pypi.python.org/pypi/ShellCreator/)
+[![Build Status](https://travis-ci.org/mewais/ShellCreator.svg?branch=master)](https://travis-ci.org/mewais/ShellCreator)
+[![Downloads](https://pepy.tech/badge/shellcreator)](https://pepy.tech/project/shellcreator)
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
+
 This is a simple python library that can be used to create entire shells for CLI applications. It was originally a part of another application, and then I decided to split it and make it a library on its own. The shell has following features:
 - Python like arithmetic operators
 - Setting/Unsetting variables
