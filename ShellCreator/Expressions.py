@@ -96,7 +96,6 @@ def evaluateExpression(ast, builtin_variables, variables):
             non_variable = pyparsing.Word('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
             grammar = pyparsing.ZeroOrMore(spaces | non_variable | variable)
             values = grammar.parseString(value)
-            print(values)
             # Now evaluate the variables
             newValue = ''
             for i, value in enumerate(values):
