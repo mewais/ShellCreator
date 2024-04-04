@@ -1,3 +1,5 @@
+[![FreePalestine.Dev](https://freepalestine.dev/header/1)](https://freepalestine.dev)
+
 # Shell Creator
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/mewais/ShellCreator/graphs/commit-activity)
